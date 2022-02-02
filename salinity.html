@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-api-2.4.2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-api-2.4.2.min.js"></script>
+    <title>Salinity Calculation</title>
+</head>
+<body>
+
+<div class="container mt-4" id="window_scale">
+    <div class="card">
+        <div class="card-body">
+            <h5>Salinity Calculator</h5>
+            <hr>
+            <div class="row" id="chart_container">
+                <small>Calculator to convert Salinity in PPM to Resistivity in Ohmm for any given temperature.</small>
+                <br><br><div id="chart"></div>
+            </div>
+            <div class="row">
+                <div class="col-xl-6 col-sm-12">
+                    <br><br>
+                    <span style="font-size: 10px; text-align: center">
+                    <h6>Input Table</h6>
+
+                    <table class="table">
+                        <tr>
+                            <th>Salinity<br>(ppm)</th>
+                            <th>Temperature</th>
+                            <th>Water Resistivity<br>(ohm.m)</th>
+                        </tr>
+
+                        <tr>
+                            <td><input type="number" class="form-control form-control-sm" id="sal_1"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="tem_1"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="rw_1"></td>
+                        </tr>
+                        <tr>
+                            <td><input type="number" class="form-control form-control-sm" id="sal_2"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="tem_2"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="rw_2"></td>
+                        </tr>
+                        <tr>
+                            <td><input type="number" class="form-control form-control-sm" id="sal_3"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="tem_3"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="rw_3"></td>
+                        </tr>
+                        <tr>
+                            <td><input type="number" class="form-control form-control-sm" id="sal_4"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="tem_4"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="rw_4"></td>
+                        </tr>
+                        <tr>
+                            <td><input type="number" class="form-control form-control-sm" id="sal_5"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="tem_5"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="rw_5"></td>
+                        </tr>
+                    </table>
+
+                    </span>
+                    <div>
+                        <label for="tem_unit">Temperature unit:</label>
+                        <select name="" id="tem_unit">
+                            <option value="F">degF</option>
+                            <option value="C">degC</option>
+                        </select>
+                        <br><br>
+                    </div>
+
+                    <button class="btn btn-primary btn-sm" id="calc" style="width: 200px">calc</button>
+                    <br><a href="#" id="clean_rw">clear RW data</a>
+                    <br><a href="#" id="clean_sal">clear Sal data</a>
+                </div>
+
+            </div>
+            <hr>
+            <p><small>This web app is developed by Epo Prasetya Kusumah - Dept of geology, <a href="https://universitaspertamina.ac.id/">Universitas Pertamina</a>.</small></p>
+        </div>
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+<script>
+    function cal(a, b, op) {
+        const l1 = a.length
+        const c = Array(l1)
+        for (let i = 0; i < l1; i++) {
+            if (op == "+") {
+                c[i] = a[i] + b[i]
+            }
+            if (op == "-") {
+                c[i] = a[i] - b[i]
+            }
+            if (op == "*") {
+                c[i] = a[i] * b[i]
+            }
+            if (op == "/") {
+                c[i] = a[i] / b[i]
+            }
+        }
+        return c
+    }
+
+    function ran(l, h, s) {
+        var c = []
+        i = l
+        while (i < h) {
+            c.push(i)
+            i += s
+        }
+        return c
+    }
+
+    function rw_degF(T, sal) {
+        const rw_ = Math.pow((400000 / T / sal), 0.88)
+        return rw_
+    }
+
+    function sal_degF(T, rw) {
+        const sal_ = 400000 / T / (Math.pow(rw, 1.14))
+        return sal_
+    }
+
+    // Providing basic data ========================================
+
+    let T = ran(50, 400, 10)
+    let sal = ran(700, 1000, 100)
+    sal = sal.concat(ran(1000, 10000, 1000))
+    sal = sal.concat(ran(10000, 100000, 10000))
+    sal = sal.concat(ran(100000, 200000, 100000))
+
+
+    // Calculating rw from T and Sal with rw_degF ========================================
+    let rws = []
+
+    for (i = 0; i < sal.length; i++) {
+        temporary = []
+        for (j = 0; j < T.length; j++) {
+            temperature = T[j]
+            salinity = sal[i]
+
+            rw_ = rw_degF(temperature, salinity)
+            temporary.push(rw_)
+        }
+        rws.push(temporary)
+    }
+
+    // Providing Column Data Source ========================================
+    cdfs = []
+    for (i = 0; i < rws.length; i++) {
+        const x = T
+        const y = rws[i]
+        cdfs.push(new Bokeh.ColumnDataSource({data: {x: x, y: y}}))
+    }
+
+    // Generatiing Chart ========================================
+    const plt = Bokeh.Plotting;
+    const p = plt.figure({
+        y_axis_type: "log",
+        x_axis_label: "Temp (F)",
+        y_axis_label: "RW (ohmm)",
+        x_range: new Bokeh.Range1d({start: 32, end: 480}),
+        extra_x_ranges: {"TempC": new Bokeh.Range1d({start: 0, end: 48.889})}
+    })
+
+    p.add_layout(new Bokeh.LinearAxis({x_range_name: "TempC", axis_label: 'Temp (C)'}), 'below');
+
+
+    for (i = 0; i < rws.length; i++) {
+        p.text(T[T.length - 1], rws[i][T.length - 1], sal[i].toString() + ' ppm', {
+            text_font_style: '',
+            text_font_size: '10px',
+            text_baseline: 'middle'
+        })
+        p.line({field: 'x'}, {field: 'y'}, {source: cdfs[i]})
+    }
+
+    let point_data = new Bokeh.ColumnDataSource({data: {x: [], y: [], text: []}})
+    p.scatter({field: 'x'}, {field: 'y'}, {source: point_data, color: 'red',})
+    p.text({field: 'x'}, {field: 'y'}, {field: 'text'}, {
+        source: point_data,
+        text_font_style: '',
+        text_font_size: '10px',
+        text_baseline: 'middle'
+    },)
+    const s = document.getElementById('chart')
+    plt.show(p, s)
+
+
+    const triger = document.getElementById('calc')
+    triger.addEventListener("mouseup", function () {
+        const input_names = [["sal_1", "tem_1", "rw_1"],
+            ["sal_2", "tem_2", "rw_2"],
+            ["sal_3", "tem_3", "rw_3"],
+            ["sal_4", "tem_4", "rw_4"],
+            ["sal_5", "tem_5", "rw_5"],
+            ["sal_6", "tem_6", "rw_6"]]
+        const temp_type = document.getElementById('tem_unit').value
+        console.log(temp_type)
+        let table_values = []
+        for (let i = 0; i < 5; i++) {
+            let k = []
+            for (let j = 0; j < 3; j++) {
+                let vals = document.getElementById(input_names[i][j]).value
+                k.push(parseFloat(vals))
+            }
+            table_values.push(k)
+        }
+
+        for (let i = 0; i < 5; i++) {
+            let sal_ = table_values[i][0]
+            let tem_ = table_values[i][1]
+            let rw_ = table_values[i][2]
+
+            if (temp_type == "C") {
+                console.log('unit change')
+                tem_ = (tem_ * 9 / 5) + 32
+            }
+
+            if (isNaN(sal_)) {
+                table_values[i][0] = sal_degF(tem_, rw_)
+            } else if (isNaN(rw_)) {
+                table_values[i][2] = rw_degF(tem_, sal_)
+            }
+        }
+
+        let x__ = []
+        let y__ = []
+        let s__ = ['#01', '#02', '#03', '#04', '#05',]
+        for (let i = 0; i < 5; i++) {
+            x__.push(table_values[i][1])
+            y__.push(table_values[i][2])
+
+            for (let j = 0; j < 3; j++) {
+                let vals = document.getElementById(input_names[i][j])
+                vals.value = table_values[i][j]
+            }
+        }
+        let new_point_data = new Bokeh.ColumnDataSource({data: {x: x__, y: y__, text: s__}})
+        point_data.data = new_point_data.data
+
+        s
+    })
+
+    const chart_container = document.getElementById("chart_container")
+    p.width = chart_container.offsetWidth - 40;
+
+    const rw_clear = document.getElementById("clean_rw")
+    rw_clear.addEventListener("mouseup", function () {
+        const input_names = ["rw_1", "rw_2", "rw_3", "rw_4", "rw_5",]
+        for (i = 0; i < 5; i++) {
+            document.getElementById(input_names[i]).value = ""
+        }
+    })
+
+
+    const sal_clear = document.getElementById("clean_sal")
+    sal_clear.addEventListener("mouseup", function () {
+        const input_names = ["sal_1", "sal_2", "sal_3", "sal_4", "sal_5",]
+        for (i = 0; i < 5; i++) {
+            document.getElementById(input_names[i]).value = ""
+        }
+    })
+    window.addEventListener("resize", function () {
+        const chart_container = document.getElementById("chart_container")
+        p.width = chart_container.offsetWidth - 40;
+    })
+
+</script>
+
+</body>
+</html>
